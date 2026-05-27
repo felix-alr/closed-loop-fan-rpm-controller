@@ -1,17 +1,25 @@
-# Welcome to MkDocs
+# K1C Exhaust System Design
+## Overview
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+3D printing produces ultra fine particles (UFPs) and volatile organic compounds (VOCs). Those can be toxic to humans, which is why exposure should be kept at a minimum.
+For that reason, I have designed a custom exhaust and filter system for my Creality K1C 3D printer in order to vent the enclosure properly and to preclude exposure to toxic substances.
 
-## Commands
+## Key Features
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+1. Custom fan controller for BLHP2432_H24
+    - fan safety shutdown
+    - RPM control
+2. Custom fan to hose adapter
+3. Custom filter system
 
-## Project layout
+## Results
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+## System Architecture
+
+## Hardware
+
+## Getting Started
+
+### Installation
+
+### Setup
