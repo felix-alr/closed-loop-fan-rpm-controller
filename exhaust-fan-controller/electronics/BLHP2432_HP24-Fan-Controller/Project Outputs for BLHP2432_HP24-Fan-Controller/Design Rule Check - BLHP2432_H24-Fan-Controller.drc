@@ -1,7 +1,7 @@
 Protel Design System Design Rule Check
 PCB File : C:\Users\felix\GitHub\k1c-exhaust-system-design\exhaust-fan-controller\electronics\BLHP2432_HP24-Fan-Controller\BLHP2432_H24-Fan-Controller.PcbDoc
-Date     : 27/05/2026
-Time     : 15:07:11
+Date     : 28/05/2026
+Time     : 14:21:23
 
 Processing Rule : Clearance Constraint (Gap=0.254mm) (All),(All)
 Rule Violations :0
@@ -55,9 +55,7 @@ Processing Rule : Minimum Solder Mask Sliver (Gap=0.254mm) (All),(All)
 Rule Violations :0
 
 Processing Rule : Silk To Solder Mask (Clearance=0.254mm) (IsPad),(All)
-   Violation between Silk To Solder Mask Clearance Constraint: (0.158mm < 0.254mm) Between Arc (24mm,38.5mm) on Top Overlay And Pad Q1-1(24mm,40mm) on Multi-Layer [Top Overlay] to [Top Solder] clearance [0.158mm]
-   Violation between Silk To Solder Mask Clearance Constraint: (0.225mm < 0.254mm) Between Arc (24mm,38.5mm) on Top Overlay And Pad Q1-3(24mm,37mm) on Multi-Layer [Top Overlay] to [Top Solder] clearance [0.225mm]
-Rule Violations :2
+Rule Violations :0
 
 Processing Rule : Silk to Silk (Clearance=0.254mm) (All),(All)
 Rule Violations :0
@@ -81,6 +79,6 @@ Processing Rule : Supply Net(s)(InNet('+5'))
 Rule Violations :0
 
 
-Violations Detected : 2
+Violations Detected : 0
 Waived Violations : 0
-Time Elapsed        : 00:00:04
+Time Elapsed        : 00:00:13
