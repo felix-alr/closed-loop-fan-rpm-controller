@@ -1,7 +1,7 @@
 Protel Design System Design Rule Check
 PCB File : C:\Users\felix\GitHub\k1c-exhaust-system-design\exhaust-fan-controller\electronics\BLHP2432_HP24-Fan-Controller\BLHP2432_H24-Fan-Controller.PcbDoc
 Date     : 28/05/2026
-Time     : 14:21:23
+Time     : 15:02:52
 
 Processing Rule : Clearance Constraint (Gap=0.254mm) (All),(All)
 Rule Violations :0
@@ -81,4 +81,4 @@ Rule Violations :0
 
 Violations Detected : 0
 Waived Violations : 0
-Time Elapsed        : 00:00:13
+Time Elapsed        : 00:00:04
