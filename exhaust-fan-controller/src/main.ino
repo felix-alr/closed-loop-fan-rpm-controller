@@ -30,10 +30,12 @@ int error_code = 0;
 
 // Current duty cycle for PWM signal
 float duty_cycle = 0.0;
+// Current rpm setpoint for the PID controller
+float rpm_setpoint_percentage = 0.0f;
 // Amount of potentiometer measurements that shall be averaged
-float duty_measurements_per_average = 4;
-// The minimum value that the new duty cycle has to differ from the previous one to induce a change
-float duty_threshold = 0.0045;
+float potentiometer_measurements_per_average = 4;
+// The minimum value that the new potentiometer measuremant has to differ from the previous one to induce a change
+float potentiometer_threshold = 0.0045;
 
 
 // Related to rpm calculation
@@ -97,29 +99,29 @@ void setup_rising_edge_detection() {
 }
 
 // Get duty cycle (0-1) from Potentiometer
-float read_duty(uint8_t analog_pin) {
+float read_potentiometer(uint8_t analog_pin) {
   return ((float)analogRead(analog_pin))/1015; // Dividing by 1015 instead of 1023 to ensure that 100% can actually be reached.
+}
+
+// Returns the current rpm setpoint and ensures it is withing the given maximum values for the fan.
+uint16_t get_rpm_setpoint() {
+  return max(min(MAX_FAN_RPM * rpm_setpoint_percentage, MAX_FAN_RPM), 0);
 }
 
 // FG signal and rpm evaluation
 
-uint16_t calc_rpm() {
+uint16_t get_rpm() {
+  // Return 0 if no full measurement has been made yet (no two consecutive rising edges have been measured yet)
+  if (t_rising_edge_1 == 0 || t_rising_edge_2 == 0) return 0;
   // Return prev_rpm when overflow occurs
   if (t_rising_edge_1 < t_rising_edge_2) return prev_rpm;
-  // Return 0 if no measurement has been made yet (latest rising edge detected at time 0)
-  if (t_rising_edge_1 == 0) return 0;
   // Return N(rpm)=30/Ts(ms)
   return 30 / (t_rising_edge_1 - t_rising_edge_2);
 }
 
-uint16_t get_rpm() {
-  prev_rpm = calc_rpm();
-  return prev_rpm;
-}
-
 uint16_t get_avg_rpm() {
-  uint16_t avg_rpm = (calc_rpm() + prev_rpm)/2;
-  get_rpm();
+  uint16_t avg_rpm = (get_rpm() + prev_rpm)/2;
+  prev_rpm = get_rpm();
   return avg_rpm;
 }
 
@@ -169,56 +171,35 @@ void loop() {
     return;
   }
 
-  // Duty cycle
+  // Potentiometer Measurement
 
-  // Amount of duty cycle measurements completed for the purpose of averaging
-  static float duty_count = 0;
-  // Variable to calculate duty count average
-  static float d = 0;
+  // Amount of potentiometer measurements completed for the purpose of averaging
+  static float measurement_count = 0;
+  // Variable to calculate average
+  static float potentiometer_avg = 0;
 
 
-  // Set duty cycle
+  // Set rpm setpoint
 
-  if (duty_count < duty_measurements_per_average) {
-    d += read_duty(PIN_POTENTIOMETER_SPEED);
-    duty_count++;
+  if (measurement_count < potentiometer_measurements_per_average) {
+    potentiometer_avg += read_potentiometer(PIN_POTENTIOMETER_SPEED);
+    measurement_count++;
   } else {   // Desired amount of measurements reached
-    // New average value of duty cycle
-    float new_duty = d/duty_measurements_per_average;
-    // Ensures that the duty cycle is only altered when it differs significantly (more than dutyKeepBelow) from the previous value to decrease physical load on the fan and maximize its lifetime.
-    if (!(new_duty - duty_threshold <= duty_cycle && duty_cycle <= new_duty + duty_threshold)) {
-      duty_cycle = d/duty_measurements_per_average;
-      set_pwm_duty(duty_cycle);
+    // New average value of rpm setpoint
+    float new_rpm_setpoint = potentiometer_avg/potentiometer_measurements_per_average;
+    // Ensures that the rpm setpoint is only altered when it differs significantly enough from the previous value to avoid altering the setpoint based on noise.
+    if (!(new_rpm_setpoint - potentiometer_threshold <= rpm_setpoint_percentage && rpm_setpoint_percentage <= new_rpm_setpoint + potentiometer_threshold)) {
+      rpm_setpoint_percentage = new_rpm_setpoint;
     }
     // Reset temporary variables for averaging
-    duty_count = 0;
-    d = 0;
-  }
-
-  // RPM  ------------- TODO: update this part as well
-
-  // Resetting RPM and FGTimer in the unlikely case that millis() overflows and starts at 0 again (after 49.71 days)
-  if (FGTimer > millis()) {
-    RPM = 0;
-    FGTimer = 0;
-    FGFreq = 0;
-  }
-  // Calculating RPM each second after evaluating FGFreq
-  if ((millis() - FGTimer) >= 1000) {
-    // Calculation of RPM using frequency FGFreq of FG signal which is a frequency modulated rectangular signal
-    // Now the revolution period TS equals twice the period of the FG signal (TS = 2 P(FG) = 2/FGFreq = 60/N = 60/RPM)
-    // Thus the RPM can be calculated by multiplying the signal frequency FGFreq by 30 (RPM = 30 * FGFreq)
-    // As RPM values are evaluated periodically each second, we can only reach 30RPM accuracy. To allow for 10RPM accuracy, we conduct a running average calculation using the avgRPMArr array.
-    get_rpm();
-    // Reset frequency and timer
-    FGFreq = 0;
-    FGTimer = millis();
+    measurement_count = 0;
+    potentiometer_avg = 0;
   }
 
 
   // Display
 
-  // Toggle between showing RPM / duty cycle when button has been pressed.
+  // Toggle between showing rpm / duty cycle when button has been pressed.
   if (detect_rising_edge(PIN_BUTTON_VIEW_DUTY)) {
     show_rpm = !show_rpm;
     display.clear();
