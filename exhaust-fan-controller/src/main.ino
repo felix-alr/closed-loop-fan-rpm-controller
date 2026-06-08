@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <TM1637Display.h>
 
+#include"pid.h"
+
 // Constants
 
 #define PIN_BUTTON_VIEW_DUTY    0 // physical pin 13
@@ -19,6 +21,8 @@
 #define ERROR_SURPASSED_MAX_RPM 1
 
 TM1637Display display(PIN_DISPLAY_CLK, PIN_DISPLAY_DIO);
+
+PIDControllerInfo pid_info;
 
 
 // State variables
@@ -147,6 +151,7 @@ void setup() {
   pinMode(PIN_BUTTON_VIEW_DUTY, INPUT);
   pinMode(PIN_POTENTIOMETER_SPEED, INPUT);
   pinMode(PIN_FAN_FG_SIGNAL, INPUT);
+
   setup_pwm(319, 0);
 
   pinMode(11, INPUT_PULLUP); // Set reset pin to pullup to allow for long press to reset the microcontroller
@@ -158,6 +163,12 @@ void setup() {
   // Setup display
   display.setBrightness(5);
   display.clear();
+
+  // Setup pid controller
+  pid_init(&pid_info);
+  pid_arw_set(&pid_info, true);
+  //pid_para_set(&pid_info, Kp, Ti, Td, Tf, Ts);
+  pid_limits_set(&pid_info, 0.0f, 1.0f);
 }
 
 
@@ -195,6 +206,15 @@ void loop() {
     measurement_count = 0;
     potentiometer_avg = 0;
   }
+
+  // PID control loop
+
+  float m = 0.0;
+  float e = get_rpm_setpoint()-get_avg_rpm();
+
+  pid_execute(&pid_info, e, &m);
+
+  set_pwm_duty(m);
 
 
   // Display
