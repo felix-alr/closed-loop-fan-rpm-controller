@@ -141,7 +141,7 @@ void handle_fg_interrupt() {
     error_code = 1;
   }
   // Switch rising edge times and save latest measurement
-  t_rising_edge_1 = t_rising_edge_2;
+  t_rising_edge_2 = t_rising_edge_1;
   t_rising_edge_1 = time;
 }
 
