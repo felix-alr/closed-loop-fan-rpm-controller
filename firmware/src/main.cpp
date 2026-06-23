@@ -119,8 +119,8 @@ uint16_t get_rpm() {
   if (t_rising_edge_1 == 0 || t_rising_edge_2 == 0) return 0;
   // Return prev_rpm when overflow occurs
   if (t_rising_edge_1 < t_rising_edge_2) return prev_rpm;
-  // Return N(rpm)=30/Ts(ms)
-  return 30 / (t_rising_edge_1 - t_rising_edge_2);
+  // Return N(rpm)=3e7/Ts (us/us)
+  return 3e7 / (t_rising_edge_1 - t_rising_edge_2);
 }
 
 uint16_t get_avg_rpm() {
@@ -134,7 +134,7 @@ uint16_t get_avg_rpm() {
 // Count FG signal rising edges for determining signal frequency and thus rpm
 void handle_fg_interrupt() {
   // Immediately save current time for minimal error in time measurement
-  uint32_t time = millis();
+  uint32_t time = micros();
   // If the previous rpm measurement was too high, an error state is induced and the fan is shut down
   if (get_rpm() > MAX_FAN_RPM + FAN_RPM_FAULT_MARGIN) {
     error_state_active = true;

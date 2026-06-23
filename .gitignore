@@ -1,4 +1,6 @@
 History/
 __Previews/
-.pio
-.vscode
+.pio/
+.vscode/
+plotter/
+firmware/.gitignore
