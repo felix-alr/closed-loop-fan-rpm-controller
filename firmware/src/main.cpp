@@ -20,6 +20,10 @@
 #define ERROR_UNKNOWN           0
 #define ERROR_SURPASSED_MAX_RPM 1
 
+#define CONTROLLER_TS_MS        20 // Ts in ms for the pi controller
+
+#define TIMER1_HZ               25e3
+
 TM1637Display display(PIN_DISPLAY_CLK, PIN_DISPLAY_DIO);
 
 PIDControllerInfo pid_info;
@@ -57,6 +61,19 @@ bool show_rpm = false;
 uint8_t duty_cycle_display_text[] = {0x00, 0x00, 0x00, 0b01110011};
 
 
+// Control Loop
+
+void setup_pid() {
+  pid_init(&pid_info);
+  pid_arw_set(&pid_info, true);
+  pid_para_set(&pid_info, 0.00199, 1.27, 0, 0, CONTROLLER_TS_MS);
+  pid_limits_set(&pid_info, 0.0f, 1.0f);
+}
+
+void attach_pi_controller_interrupt() {
+  GIMSK |= (1<<PCIE0);
+  PCMSK0 |= (1<<PCINT6);
+}
 
 // PWM control signal
 
@@ -145,16 +162,32 @@ void handle_fg_interrupt() {
   t_rising_edge_1 = time;
 }
 
+// Ensures that the pid controller is executed every CONTROLLER_TS_MS ms.
+volatile uint16_t pi_cycle_counter = 0;
+
+ISR(PCINT0_vect) {
+  pi_cycle_counter++;
+  if (pi_cycle_counter == TIMER1_HZ*CONTROLLER_TS_MS) {
+    float m = 0;
+    pid_execute(&pid_info, get_avg_rpm()-get_rpm_setpoint(), &m);
+    set_pwm_duty(m);
+    pi_cycle_counter = 0;
+  }
+}
+
 
 void setup() {
   // Setup pins and timer
   pinMode(PIN_BUTTON_VIEW_DUTY, INPUT);
   pinMode(PIN_POTENTIOMETER_SPEED, INPUT);
   pinMode(PIN_FAN_FG_SIGNAL, INPUT);
-
-  setup_pwm(319, 0);
-
   pinMode(11, INPUT_PULLUP); // Set reset pin to pullup to allow for long press to reset the microcontroller
+
+  cli();
+  setup_pwm(319, 0);
+  attach_pi_controller_interrupt();
+  sei();
+
 
   // Setup interrupt for determining frequency of FG signal
   pinMode(PIN_FAN_FG_SIGNAL, INPUT_PULLUP);
@@ -164,11 +197,8 @@ void setup() {
   display.setBrightness(5);
   display.clear();
 
-  // Setup pid controller
-  pid_init(&pid_info);
-  pid_arw_set(&pid_info, true);
-  //pid_para_set(&pid_info, Kp, Ti, Td, Tf, Ts);
-  pid_limits_set(&pid_info, 0.0f, 1.0f);
+  // Setup pi controller
+  setup_pi();
 }
 
 
