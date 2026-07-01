@@ -95,7 +95,7 @@ void end_step() {
 // Can detect a rising edge on any of the pins of the ATTiny44A
 uint8_t prev_states[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-bool detect_rising_edge(uint8_t pin) {
+bool detect_ui_btn_rising_edge(uint8_t pin) {
   uint8_t current = digitalRead(pin);
   bool ret = prev_states[pin] != current && current == HIGH;
   prev_states[pin] = current;
@@ -204,7 +204,7 @@ void loop() {
     }
   } 
 
-  if (detect_rising_edge(PIN_BUTTON) && !sampling_active) {
+  if (detect_ui_btn_rising_edge(PIN_BUTTON) && !sampling_active) {
     sampling_active = true;
     sample_count = 0;
   }
