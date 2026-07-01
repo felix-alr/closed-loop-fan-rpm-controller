@@ -5,7 +5,7 @@
 
 // Constants
 
-#define PIN_BUTTON_VIEW_DUTY    0 // physical pin 13
+#define PIN_BUTTON_UI           0 // physical pin 13
 #define PIN_POTENTIOMETER_SPEED 1 // physical pin 12
 
 #define PIN_DISPLAY_CLK         4 // physical pin 9
@@ -57,13 +57,13 @@ uint16_t prev_rpm = 0;
 
 // Boolean determining if rpm or duty cycle shall be shown on the display
 bool show_rpm = false;
-// Array for displaying duty cycle without flicker and a "P" for percent at the end
-uint8_t duty_cycle_display_text[] = {0x00, 0x00, 0x00, 0b01110011};
+// Array for displaying rpm setpoint without flicker and a "P" for percent at the end
+uint8_t rpm_setpoint_display_text[] = {0x00, 0x00, 0x00, 0b01110011};
 
 
 // Control Loop
 
-void setup_pid() {
+void setup_pi() {
   pid_init(&pid_info);
   pid_arw_set(&pid_info, true);
   pid_para_set(&pid_info, 0.00199, 1.27, 0, 0, CONTROLLER_TS_MS);
@@ -178,7 +178,7 @@ ISR(PCINT0_vect) {
 
 void setup() {
   // Setup pins and timer
-  pinMode(PIN_BUTTON_VIEW_DUTY, INPUT);
+  pinMode(PIN_BUTTON_UI, INPUT);
   pinMode(PIN_POTENTIOMETER_SPEED, INPUT);
   pinMode(PIN_FAN_FG_SIGNAL, INPUT);
   pinMode(11, INPUT_PULLUP); // Set reset pin to pullup to allow for long press to reset the microcontroller
@@ -207,6 +207,7 @@ void loop() {
   // Shutdown if erroneous state has been reached
   if (error_state_active) {
     set_pwm_duty(0);
+    rpm_setpoint_percentage = 0;
     uint8_t data[] = {0b01111001, 0b01110111, 0b01110111, display.encodeDigit(error_code)};
     display.setSegments(data);
     return;
@@ -237,20 +238,10 @@ void loop() {
     potentiometer_avg = 0;
   }
 
-  // PID control loop
-
-  float m = 0.0;
-  float e = get_rpm_setpoint()-get_avg_rpm();
-
-  pid_execute(&pid_info, e, &m);
-
-  set_pwm_duty(m);
-
-
   // Display
 
   // Toggle between showing rpm / duty cycle when button has been pressed.
-  if (detect_rising_edge(PIN_BUTTON_VIEW_DUTY)) {
+  if (detect_rising_edge(PIN_BUTTON_UI)) {
     show_rpm = !show_rpm;
     display.clear();
   }
@@ -260,9 +251,9 @@ void loop() {
     display.showNumberDec(get_avg_rpm());
   } else {
     int duty = duty_cycle*100;
-    duty_cycle_display_text[0] = display.encodeDigit((duty/100)%10);
-    duty_cycle_display_text[1] = display.encodeDigit((duty/10)%10);
-    duty_cycle_display_text[2] = display.encodeDigit((duty)%10);
-    display.setSegments(duty_cycle_display_text);
+    rpm_setpoint_display_text[0] = display.encodeDigit((rpm_setpoint_percentage/100)%10);
+    rpm_setpoint_display_text[1] = display.encodeDigit((rpm_setpoint_percentage/10)%10);
+    rpm_setpoint_display_text[2] = display.encodeDigit((rpm_setpoint_percentage)%10);
+    display.setSegments(rpm_setpoint_display_text);
   }
 }
