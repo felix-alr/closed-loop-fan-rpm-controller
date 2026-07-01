@@ -3,6 +3,11 @@
 
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 // Structure, that holds PID parameters and the current controller state.
 typedef struct PIDControllerInfoStruct {
 
@@ -53,5 +58,9 @@ bool pid_util_i_part_active(PIDControllerInfo* pid_info);
 bool pid_util_filter_active(PIDControllerInfo* pid_info);
 float pid_util_max(float a, float b);
 float pid_util_min(float a, float b);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

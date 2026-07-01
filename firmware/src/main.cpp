@@ -167,7 +167,7 @@ volatile uint16_t pi_cycle_counter = 0;
 
 ISR(PCINT0_vect) {
   pi_cycle_counter++;
-  if (pi_cycle_counter == TIMER1_HZ*CONTROLLER_TS_MS) {
+  if (pi_cycle_counter >= TIMER1_HZ*CONTROLLER_TS_MS/1000) {
     float m = 0;
     pid_execute(&pid_info, get_avg_rpm()-get_rpm_setpoint(), &m);
     set_pwm_duty(m);
@@ -250,10 +250,10 @@ void loop() {
   if (show_rpm) {
     display.showNumberDec(get_avg_rpm());
   } else {
-    int duty = duty_cycle*100;
-    rpm_setpoint_display_text[0] = display.encodeDigit((rpm_setpoint_percentage/100)%10);
-    rpm_setpoint_display_text[1] = display.encodeDigit((rpm_setpoint_percentage/10)%10);
-    rpm_setpoint_display_text[2] = display.encodeDigit((rpm_setpoint_percentage)%10);
+    int rpm_set = rpm_setpoint_percentage*100;
+    rpm_setpoint_display_text[0] = display.encodeDigit((rpm_set/100)%10);
+    rpm_setpoint_display_text[1] = display.encodeDigit((rpm_set/10)%10);
+    rpm_setpoint_display_text[2] = display.encodeDigit((rpm_set)%10);
     display.setSegments(rpm_setpoint_display_text);
   }
 }
